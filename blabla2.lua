@@ -778,6 +778,7 @@ task.spawn(function()
             hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, -3)
             hrp.CFrame = CFrame.lookAt(hrp.Position, tHrp.Position)
             hrp.Velocity = Vector3.zero
+            hrp.AssemblyLinearVelocity = Vector3.zero
             
             RunService.Heartbeat:Wait()
         end
