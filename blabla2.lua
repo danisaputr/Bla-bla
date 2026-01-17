@@ -483,7 +483,7 @@ RunService.Heartbeat:Connect(function()
         if target and target:FindFirstChild("HumanoidRootPart") then
             local thrp = target.HumanoidRootPart
             -- Lock posisi di atas target (26 studs)
-            hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(-15, 26, 0), thrp.Position)
+            hrp.CFrame = CFrame.new(-thrp.Position + Vector3.new(-15, 26, 0), thrp.Position)
         end
 
     -- 3. HollowFollow / RedFollow (Old Logic)
