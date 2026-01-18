@@ -748,9 +748,9 @@ task.spawn(function()
         local char = LocalPlayer.Character
         if not char then continue end
 
-        UseFold(0.5)
+        UseFold(0.1)
         if not AutoRed then continue end
-        task.wait(1)
+        task.wait(0.001)
 
         RedFollow = true
         task.wait(0.001)
