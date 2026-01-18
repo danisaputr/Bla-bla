@@ -713,7 +713,7 @@ end)
 -- ===== AUTO RED LOOP =====
 task.spawn(function()
     while true do
-        task.wait(3.5)
+        task.wait(2)
         if not AutoRed then
             RedFollow = false
             continue
