@@ -713,7 +713,7 @@ end)
 -- ===== AUTO RED LOOP =====
 task.spawn(function()
     while true do
-        task.wait(0.5)
+        task.wait(3.5)
         if not AutoRed then
             RedFollow = false
             continue
@@ -730,7 +730,7 @@ task.spawn(function()
                 CurrentRedTarget = GetValidTargetFromList(RedTargetList)
             until not AutoRed or CurrentRedTarget
             
-            task.wait(3.5)
+            task.wait(0.5)
             continue
         end
 
