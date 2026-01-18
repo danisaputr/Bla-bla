@@ -542,7 +542,7 @@ RunService.Heartbeat:Connect(function()
         local target = CurrentPurpleTarget
         if target and target:FindFirstChild("HumanoidRootPart") then
             local thrp = target.HumanoidRootPart
-            hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(-20, 28, 0), thrp.Position)
+            hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(-20, 26, 0), thrp.Position)
         end
 
     -- 3. HollowFollow / RedFollow (Old Logic)
