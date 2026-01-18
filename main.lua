@@ -600,7 +600,7 @@ task.spawn(function()
                 CurrentRedTarget = GetValidTargetFromList(RedTargetList)
             until not AutoRed or CurrentRedTarget
             
-            task.wait(2)
+            task.wait(3)
             continue
         end
 
