@@ -861,7 +861,7 @@ task.spawn(function()
             RunService.Heartbeat:Wait()
         end
 
-        task.wait(0.5)
+        task.wait(4)
 
         -- Step 4: Purple Phase (Pindah Target jika perlu)
         CounterFollow = false
