@@ -723,7 +723,7 @@ task.spawn(function()
 
         if not CurrentRedTarget then
             RedFollow = false
-            ForceKillByVoid()
+            Rayfield:Notify({Title = "Warning", Content = "Auto Red disabled due to Gojo Mode", Duration = 3})()
             
             repeat 
                 task.wait(1)
@@ -851,7 +851,7 @@ task.spawn(function()
         if not CurrentPurpleTarget then
             CounterFollow = false
             PurpleFollow = false
-            ForceKillByVoid() 
+            Rayfield:Notify({Title = "Warning", Content = "Auto Red disabled due to Gojo Mode", Duration = 3})()
             repeat 
                 task.wait(1)
                 CurrentCounterTarget = GetValidTargetFromList(CounterTargetList)
