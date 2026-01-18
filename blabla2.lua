@@ -713,7 +713,7 @@ end)
 -- ===== AUTO RED LOOP =====
 task.spawn(function()
     while true do
-        task.wait(2)
+        task.wait(1.5)
         if not AutoRed then
             RedFollow = false
             continue
@@ -839,7 +839,7 @@ end)
 -- ==== AUTO GOJO REWORK LOOP (NEW) ====
 task.spawn(function()
     while true do
-        task.wait(3)
+        task.wait(0.5)
         if not AutoGojoRework then
             CounterFollow = false
             PurpleFollow = false
@@ -856,7 +856,7 @@ task.spawn(function()
                 task.wait(1)
                 CurrentCounterTarget = GetValidTargetFromList(CounterTargetList)
             until not AutoGojoRework or CurrentCounterTarget
-            task.wait(10)
+            task.wait(5)
             continue
         end
 
