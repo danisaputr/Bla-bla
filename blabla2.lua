@@ -850,7 +850,7 @@ end)
 -- ==== AUTO GOJO REWORK LOOP (FIXED) ====
 task.spawn(function()
     while true do
-        task.wait(3)
+        task.wait(1)
         if not AutoGojoRework then
             CounterFollow = false
             PurpleFollow = false
