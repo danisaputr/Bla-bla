@@ -117,7 +117,7 @@ local function CreateSafeZone()
     SAFEZONE.Parent = Workspace
 end
 
--- ===== TARGET HELPERS =====
+-- ===== TARGET HELPERS (UPDATED PRIORITY) =====
 local function IsTargetAlive(target)
     if not target then return false end
     local hum = target:FindFirstChildOfClass("Humanoid")
@@ -128,10 +128,12 @@ local function GetValidTargetFromList(nameList)
     if not nameList or type(nameList) ~= "table" or #nameList == 0 then return nil end
     
     if Workspace:FindFirstChild("Living") then
-        for _, name in pairs(nameList) do
+        -- MENGGUNAKAN IPAIRS: Ini memaksa skrip mengecek dari urutan ke-1, ke-2, dst.
+        -- Jika Target ke-1 (Prioritas) hidup, dia akan LANGSUNG dipilih dan mengabaikan urutan ke-2.
+        for _, name in ipairs(nameList) do
             local targetModel = Workspace.Living:FindFirstChild(name)
             if targetModel and targetModel ~= LocalPlayer.Character and IsTargetAlive(targetModel) then
-                return targetModel 
+                return targetModel -- Target ditemukan, berhenti mencari yang lain.
             end
         end
     end
