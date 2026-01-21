@@ -683,7 +683,7 @@ end)
 
 -- ===== AUTO CLEAR EXP LOGIC =====
 task.spawn(function()
-    while task.wait(120) do -- Cek setiap 1 detik
+    while task.wait(2) do -- Cek setiap 1 detik
         if AutoClearExp then
             pcall(function()
                 local backpack = LocalPlayer.Backpack
