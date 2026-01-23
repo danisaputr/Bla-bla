@@ -684,7 +684,7 @@ RunService.Heartbeat:Connect(function()
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
             local thrp = activeTarget.HumanoidRootPart
             -- You can change H Move Offset here specifically
-            hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(0, 26, 0), thrp.Position)
+            hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(0, -15, 0), thrp.Position)
             hrp.Velocity = Vector3.zero 
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
@@ -1231,7 +1231,7 @@ task.spawn(function()
         task.wait(0.001)
 
         HMoveFollow = true
-        task.wait(0.0001)
+        task.wait(0.001)
 
         pcall(function()
             -- [NEW] REPLACED REMOTE ARGS
