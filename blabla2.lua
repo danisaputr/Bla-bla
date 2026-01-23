@@ -1,6 +1,5 @@
 -- ===== blabla UI LIBRARY =====
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-Rayfield:LoadConfiguration()
 
 -- ===== SERVICES =====
 local Players = game:GetService("Players")
@@ -1478,3 +1477,4 @@ task.spawn(function()
         end
     end
 end)
+Rayfield:LoadConfiguration()
