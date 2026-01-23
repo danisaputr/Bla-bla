@@ -1228,7 +1228,7 @@ task.spawn(function()
         local char = LocalPlayer.Character
         if not char then continue end
 
-        task.wait(0.001)
+        task.wait(0.01)
 
         HMoveFollow = true
         task.wait(0.001)
@@ -1242,7 +1242,7 @@ task.spawn(function()
             game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
         end)
 
-        task.wait(1)
+        task.wait(1.5)
 
         HMoveFollow = false
         if AutoHMove and not IsSummoningAction then
