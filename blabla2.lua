@@ -1207,7 +1207,7 @@ end)
 -- ===== [NEW] AUTO H MOVE LOOP (Custom Remote) =====
 task.spawn(function()
     while true do
-        task.wait(1.5)
+        task.wait(1)
         if IsSummoningAction then continue end 
 
         if not AutoHMove then
