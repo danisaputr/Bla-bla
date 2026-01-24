@@ -1,5 +1,6 @@
 -- ===== blabla UI LIBRARY =====
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+Rayfield:LoadConfiguration()
 
 -- ===== SERVICES =====
 local Players = game:GetService("Players")
@@ -7,7 +8,6 @@ local Rep = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager") 
-local Debris = game:GetService("Debris") -- Added Debris Service for cleanup
 local LocalPlayer = Players.LocalPlayer
 local Gojo = Rep:WaitForChild("SkillRemote"):WaitForChild("GojoRemote")
 
@@ -27,6 +27,12 @@ local AutoHMove = false
 local HMoveFollow = false
 local HMoveTargetList = {}
 local CurrentHMoveTarget = nil
+
+-- [NEW] AUTO KANEKI VARIABLE
+local AutoKaneki = false
+local KanekiFollow = false
+local KanekiTargetList = {}
+local CurrentKanekiTarget = nil
 
 -- NEW VARIABLE: AUTO KING MON & BBQ3
 local AutoKingMon = false 
@@ -79,8 +85,8 @@ local LootingActive = false
 local function UseFold(duration)
     local start = os.clock()
     while os.clock() - start < duration do
-        -- [UPDATE] Added AutoHMove check
-        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove) then return end
+        -- [UPDATE] Added AutoKaneki check
+        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove and not AutoKaneki) then return end
         if IsSummoningAction then return end 
 
         pcall(function()
@@ -129,83 +135,6 @@ local function CreateSafeZone()
     SAFEZONE.Transparency = 0.5 
     SAFEZONE.Color = Color3.fromRGB(0, 255, 128) 
     SAFEZONE.Parent = Workspace
-end
-
--- ===== [NEW] TRAP/BARRICADE CREATOR =====
-local function CreateTrapPlatform(target)
-    if not target or not target:FindFirstChild("HumanoidRootPart") then return end
-    
-    -- Konfigurasi Ukuran Trap
-    local WallHeight = 20    -- Tinggi 20 sesuai request
-    local WallWidth = 35     -- Lebar dinding
-    local Distance = 3       -- Jarak dinding dari target
-    local Thickness = 10      -- Ketebalan dinding
-    
-    local centerCF = target.HumanoidRootPart.CFrame
-    local folderName = "ZMoveTrap_" .. target.Name
-    
-    -- Hapus trap lama jika ada (dari target yang sama)
-    local oldTrap = Workspace:FindFirstChild(folderName)
-    if oldTrap then oldTrap:Destroy() end
-
-    local trapFolder = Instance.new("Folder")
-    trapFolder.Name = folderName
-    trapFolder.Parent = Workspace
-    
-    local function makeWall(cframe, size)
-        local p = Instance.new("Part")
-        p.Name = "TrapWall"
-        p.Anchored = true
-        p.CanCollide = true
-        p.Transparency = 0.6 
-        p.Material = Enum.Material.ForceField 
-        p.Color = Color3.fromRGB(255, 50, 50) 
-        p.Size = size
-        p.CFrame = cframe
-        p.Parent = trapFolder
-    end
-
-    -- Posisi Y dinaikkan setengah dari tinggi agar tidak tertanam di tanah
-    local yOffset = WallHeight / 2 - 3 
-
-    -- Buat Dinding (Depan, Belakang, Kiri, Kanan)
-    makeWall(centerCF * CFrame.new(0, yOffset, -Distance), Vector3.new(WallWidth, WallHeight, Thickness))
-    makeWall(centerCF * CFrame.new(0, yOffset, Distance), Vector3.new(WallWidth, WallHeight, Thickness))
-    makeWall(centerCF * CFrame.new(-Distance, yOffset, 0) * CFrame.Angles(0, math.rad(90), 0), Vector3.new(WallWidth, WallHeight, Thickness))
-    makeWall(centerCF * CFrame.new(Distance, yOffset, 0) * CFrame.Angles(0, math.rad(90), 0), Vector3.new(WallWidth, WallHeight, Thickness))
-    
-    -- [UPDATE] MONITORING LOOP
-    -- Trap akan hancur jika: Target Mati, Target Hilang, atau Waktu Habis (6 detik)
-    task.spawn(function()
-        local maxDuration = 6
-        local startTime = os.clock()
-
-        while os.clock() - startTime < maxDuration do
-            -- Jika trap sudah dihapus manual/oleh script lain, stop loop
-            if not trapFolder or not trapFolder.Parent then break end
-
-            -- Cek Kondisi Target
-            if not target or not target.Parent then
-                -- Target keluar game atau hilang dari workspace
-                trapFolder:Destroy()
-                break
-            end
-
-            local hum = target:FindFirstChildOfClass("Humanoid")
-            if not hum or hum.Health <= 0 then
-                -- Target Mati (Health 0)
-                trapFolder:Destroy()
-                break
-            end
-
-            task.wait(0.1) -- Cek status setiap 0.1 detik
-        end
-
-        -- Cleanup akhir: Pastikan trap dihapus jika waktu habis (fallback)
-        if trapFolder and trapFolder.Parent then
-            trapFolder:Destroy()
-        end
-    end)
 end
 
 -- ===== TARGET HELPERS =====
@@ -272,8 +201,8 @@ end
 -- ===== FORCE KILL VIA MAP VOID =====
 local function ForceKillByVoid()
     local startTime = os.clock()
-    -- [UPDATE] Added AutoHMove check
-    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove) and (os.clock() - startTime < 10) do 
+    -- [UPDATE] Added AutoKaneki check
+    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoKaneki) and (os.clock() - startTime < 10) do 
         if IsSummoningAction then return end
 
         local char = LocalPlayer.Character
@@ -312,7 +241,7 @@ end
 
 -- ===== UI WINDOW =====
 local Window = Rayfield:CreateWindow({
-    Name = "Auto Gojo [Z & H Move Separated]",
+    Name = "Auto Gojo & Kaneki [All Moves]",
     LoadingTitle = "System Loaded",
     LoadingSubtitle = "Full Features",
     ConfigurationSaving = {
@@ -395,7 +324,7 @@ local ZMoveDropdown = Tab:CreateDropdown({
     end
 })
 
--- [NEW] H MOVE DROPDOWN
+-- H MOVE DROPDOWN
 local HMoveDropdown = Tab:CreateDropdown({
     Name = "H Move Target",
     Options = GetTargets(),
@@ -411,6 +340,22 @@ local HMoveDropdown = Tab:CreateDropdown({
     end
 })
 
+-- [NEW] KANEKI DROPDOWN
+local KanekiDropdown = Tab:CreateDropdown({
+    Name = "Kaneki Target (Blood Farm)",
+    Options = GetTargets(),
+    CurrentOption = {},
+    MultipleOptions = true,
+    Multi = true,
+    Flag = "KanekiTargets", 
+    Callback = function(opts)
+        KanekiTargetList = opts
+        if not CurrentKanekiTarget then
+            CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
+        end
+    end
+})
+
 Tab:CreateButton({
     Name = "Refresh Target Lists",
     Callback = function()
@@ -420,6 +365,7 @@ Tab:CreateButton({
         if PurpleDropdown then PurpleDropdown:Refresh(newTargets, PurpleTargetList) end
         if ZMoveDropdown then ZMoveDropdown:Refresh(newTargets, ZMoveTargetList) end
         if HMoveDropdown then HMoveDropdown:Refresh(newTargets, HMoveTargetList) end
+        if KanekiDropdown then KanekiDropdown:Refresh(newTargets, KanekiTargetList) end
     end
 })
 
@@ -436,6 +382,7 @@ Tab:CreateToggle({
             if AutoRed then AutoRed = false end
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
+            if AutoKaneki then AutoKaneki = false end
         else
             CounterFollow = false
             PurpleFollow = false
@@ -456,6 +403,7 @@ Tab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
+            if AutoKaneki then AutoKaneki = false end
         end
     end
 })
@@ -474,11 +422,12 @@ Tab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoRed then AutoRed = false end
             if AutoHMove then AutoHMove = false end
+            if AutoKaneki then AutoKaneki = false end
         end
     end
 })
 
--- [NEW] H MOVE TOGGLE
+-- H MOVE TOGGLE
 Tab:CreateToggle({
     Name = "Auto H Move",
     CurrentValue = false,
@@ -492,6 +441,26 @@ Tab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoRed then AutoRed = false end
             if AutoZMove then AutoZMove = false end
+            if AutoKaneki then AutoKaneki = false end
+        end
+    end
+})
+
+-- [NEW] KANEKI TOGGLE
+Tab:CreateToggle({
+    Name = "Auto Kaneki (Blood > Move B)",
+    CurrentValue = false,
+    Flag = "AutoKaneki", 
+    Callback = function(v)
+        AutoKaneki = v
+        if not v then
+            KanekiFollow = false
+        else
+            if AutoGojo then AutoGojo = false end
+            if AutoGojoRework then AutoGojoRework = false end
+            if AutoRed then AutoRed = false end
+            if AutoZMove then AutoZMove = false end
+            if AutoHMove then AutoHMove = false end
         end
     end
 })
@@ -559,7 +528,8 @@ UtilityTab:CreateToggle({
             CounterFollow = false
             PurpleFollow = false
             ZMoveFollow = false
-            HMoveFollow = false -- Disable H Follow
+            HMoveFollow = false
+            KanekiFollow = false
             LootingActive = false 
             Rayfield:Notify({Title = "System", Content = "Auto King Mon ON.", Duration = 3})
         else
@@ -582,7 +552,8 @@ UtilityTab:CreateToggle({
             CounterFollow = false
             PurpleFollow = false
             ZMoveFollow = false
-            HMoveFollow = false -- Disable H Follow
+            HMoveFollow = false
+            KanekiFollow = false
             LootingActive = false 
             Rayfield:Notify({Title = "System", Content = "Auto BBQ3 ON. Checking Resources...", Duration = 3})
         else
@@ -676,6 +647,7 @@ OldTab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
+            if AutoKaneki then AutoKaneki = false end
         end
     end
 })
@@ -766,6 +738,17 @@ RunService.Heartbeat:Connect(function()
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
 
+    -- 4. [NEW] Kaneki Follow (Close for LMB)
+    elseif KanekiFollow then
+        local activeTarget = CurrentKanekiTarget
+        if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
+            local thrp = activeTarget.HumanoidRootPart
+            -- Behind 3 studs so punch connects
+            hrp.CFrame = CFrame.new(thrp.Position + (thrp.CFrame.LookVector * -3), thrp.Position)
+            hrp.Velocity = Vector3.zero 
+            hrp.AssemblyLinearVelocity = Vector3.zero
+        end
+
     elseif FollowTarget then
         local activeTarget = CurrentGojoTarget
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
@@ -780,7 +763,7 @@ end)
 -- ===== AUTO MASTERY & BREAKTHROUGH =====
 task.spawn(function()
     while true do
-        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove then
+        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoKaneki then
             task.wait(3) 
         else
             task.wait(1.5)
@@ -1259,12 +1242,6 @@ task.spawn(function()
 
         UseFold(0.1)
         if not AutoZMove then continue end
-        
-        -- [NEW LOGIC] CREATE TRAP BEFORE TELEPORT
-        if CurrentZMoveTarget then
-             CreateTrapPlatform(CurrentZMoveTarget)
-        end
-        
         task.wait(0.001)
 
         ZMoveFollow = true
@@ -1287,10 +1264,10 @@ task.spawn(function()
     end
 end)
 
--- ===== [NEW] AUTO H MOVE LOOP (Custom Remote) =====
+-- ===== AUTO H MOVE LOOP (Custom Remote) =====
 task.spawn(function()
     while true do
-        task.wait(1)
+        task.wait(1.5)
         if IsSummoningAction then continue end 
 
         if not AutoHMove then
@@ -1338,6 +1315,88 @@ task.spawn(function()
     end
 end)
 
+-- ===== [NEW] AUTO KANEKI LOOP =====
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if IsSummoningAction then continue end 
+
+        if not AutoKaneki then
+            KanekiFollow = false
+            continue
+        end
+
+        CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
+
+        if not CurrentKanekiTarget then
+             KanekiFollow = false
+             repeat
+                task.wait(0.1)
+                CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
+             until not AutoKaneki or CurrentKanekiTarget or IsSummoningAction
+             
+             if not AutoKaneki or IsSummoningAction then continue end
+        end
+
+        local char = LocalPlayer.Character
+        if not char then continue end
+
+        -- Cek Folder Living Player untuk BloodBar
+        local playerLiving = Workspace:FindFirstChild("Living") and Workspace.Living:FindFirstChild(LocalPlayer.Name)
+        local usedValues = playerLiving and playerLiving:FindFirstChild("UsedValues")
+        local bloodBar = usedValues and usedValues:FindFirstChild("Kaneki_BloodBar")
+
+        if not bloodBar then
+            -- Jika tidak ketemu (mungkin belum spawn/mati), tunggu sebentar
+            task.wait(1)
+            continue
+        end
+
+        UseFold(0.1) -- Menggunakan Fold agar tidak jatuh/stuck
+        if not AutoKaneki then continue end
+        task.wait(0.001)
+
+        KanekiFollow = true
+        task.wait(0.2)
+
+        -- LOGIKA KANEKI (BLOOD CHECK)
+        if bloodBar.Value < 60 then
+            -- Loop Farming Blood pakai LMB sampai 60
+            while AutoKaneki and IsTargetAlive(CurrentKanekiTarget) and bloodBar.Value < 60 do
+                pcall(function()
+                    local args = {
+                        buffer.fromstring("\022"),
+                        buffer.fromstring("\254\001\000\006\003LMB")
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
+                end)
+                task.wait(0.35) -- Delay antar pukulan
+            end
+        end
+
+        -- Cek lagi apakah masih aktif dan target hidup setelah farming
+        if AutoKaneki and IsTargetAlive(CurrentKanekiTarget) then
+            task.wait(0.2)
+            -- EKSEKUSI JURUS B (Saat Blood >= 60)
+            pcall(function()
+                local args = {
+                    buffer.fromstring("\022"),
+                    buffer.fromstring("\254\001\000\006\001B")
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
+            end)
+            task.wait(2) -- Tunggu animasi jurus selesai
+        end
+
+        KanekiFollow = false
+        
+        -- Reset karakter (Force Kill) agar cooldown reset (Sama seperti Auto Red)
+        if AutoKaneki and not IsSummoningAction then
+            ForceKillByVoid()
+        end
+    end
+end)
+
 -- ===== AUTO LOOT LOOP (REWORKED) =====
 task.spawn(function()
     while task.wait(0.5) do
@@ -1350,8 +1409,8 @@ task.spawn(function()
             continue 
         end
         
-        -- [UPDATE] Added HMoveFollow
-        if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow then
+        -- [UPDATE] Added HMoveFollow & KanekiFollow
+        if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or KanekiFollow then
             LootingActive = false
             continue
         end
@@ -1367,7 +1426,7 @@ task.spawn(function()
             for _, item in ipairs(items) do
                 if not AutoLootRework then break end
                 if IsSummoningAction then break end
-                if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow then break end
+                if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or KanekiFollow then break end
 
                 local itemName = item.Name
                 local nameVal = item:FindFirstChild("ItemName") or (item:FindFirstChild("ItemDrop") and item.ItemDrop:FindFirstChild("ItemName"))
@@ -1424,9 +1483,12 @@ task.spawn(function()
             if AutoZMove and (not CurrentZMoveTarget or not IsTargetAlive(CurrentZMoveTarget)) then
                 CurrentZMoveTarget = GetValidTargetFromList(ZMoveTargetList)
             end
-            -- [NEW] H MOVE REFRESH
             if AutoHMove and (not CurrentHMoveTarget or not IsTargetAlive(CurrentHMoveTarget)) then
                 CurrentHMoveTarget = GetValidTargetFromList(HMoveTargetList)
+            end
+            -- [NEW] KANEKI REFRESH
+            if AutoKaneki and (not CurrentKanekiTarget or not IsTargetAlive(CurrentKanekiTarget)) then
+                CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
             end
             if AutoGojoRework then
                  if not CurrentCounterTarget or not IsTargetAlive(CurrentCounterTarget) then
@@ -1561,4 +1623,3 @@ task.spawn(function()
         end
     end
 end)
-Rayfield:LoadConfiguration()
