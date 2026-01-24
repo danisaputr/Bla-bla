@@ -1,6 +1,5 @@
 -- ===== blabla UI LIBRARY =====
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-Rayfield:LoadConfiguration()
 
 -- ===== SERVICES =====
 local Players = game:GetService("Players")
@@ -138,14 +137,14 @@ local function CreateTrapPlatform(target)
     
     -- Konfigurasi Ukuran Trap
     local WallHeight = 20    -- Tinggi 20 sesuai request
-    local WallWidth = 15     -- Lebar dinding
-    local Distance = 6       -- Jarak dinding dari target (semakin kecil semakin sempit)
-    local Thickness = 2      -- Ketebalan dinding
+    local WallWidth = 35     -- Lebar dinding
+    local Distance = 3       -- Jarak dinding dari target
+    local Thickness = 10      -- Ketebalan dinding
     
     local centerCF = target.HumanoidRootPart.CFrame
     local folderName = "ZMoveTrap_" .. target.Name
     
-    -- Hapus trap lama jika ada
+    -- Hapus trap lama jika ada (dari target yang sama)
     local oldTrap = Workspace:FindFirstChild(folderName)
     if oldTrap then oldTrap:Destroy() end
 
@@ -158,9 +157,9 @@ local function CreateTrapPlatform(target)
         p.Name = "TrapWall"
         p.Anchored = true
         p.CanCollide = true
-        p.Transparency = 0.6 -- Agak transparan
-        p.Material = Enum.Material.ForceField -- Efek keren
-        p.Color = Color3.fromRGB(255, 50, 50) -- Merah
+        p.Transparency = 0.6 
+        p.Material = Enum.Material.ForceField 
+        p.Color = Color3.fromRGB(255, 50, 50) 
         p.Size = size
         p.CFrame = cframe
         p.Parent = trapFolder
@@ -169,17 +168,44 @@ local function CreateTrapPlatform(target)
     -- Posisi Y dinaikkan setengah dari tinggi agar tidak tertanam di tanah
     local yOffset = WallHeight / 2 - 3 
 
-    -- Dinding Depan
+    -- Buat Dinding (Depan, Belakang, Kiri, Kanan)
     makeWall(centerCF * CFrame.new(0, yOffset, -Distance), Vector3.new(WallWidth, WallHeight, Thickness))
-    -- Dinding Belakang
     makeWall(centerCF * CFrame.new(0, yOffset, Distance), Vector3.new(WallWidth, WallHeight, Thickness))
-    -- Dinding Kiri (Rotasi 90 derajat)
     makeWall(centerCF * CFrame.new(-Distance, yOffset, 0) * CFrame.Angles(0, math.rad(90), 0), Vector3.new(WallWidth, WallHeight, Thickness))
-    -- Dinding Kanan (Rotasi 90 derajat)
     makeWall(centerCF * CFrame.new(Distance, yOffset, 0) * CFrame.Angles(0, math.rad(90), 0), Vector3.new(WallWidth, WallHeight, Thickness))
     
-    -- Hapus otomatis setelah 6 detik (waktu rata-rata skill selesai) agar map tidak penuh sampah
-    Debris:AddItem(trapFolder, 6)
+    -- [UPDATE] MONITORING LOOP
+    -- Trap akan hancur jika: Target Mati, Target Hilang, atau Waktu Habis (6 detik)
+    task.spawn(function()
+        local maxDuration = 6
+        local startTime = os.clock()
+
+        while os.clock() - startTime < maxDuration do
+            -- Jika trap sudah dihapus manual/oleh script lain, stop loop
+            if not trapFolder or not trapFolder.Parent then break end
+
+            -- Cek Kondisi Target
+            if not target or not target.Parent then
+                -- Target keluar game atau hilang dari workspace
+                trapFolder:Destroy()
+                break
+            end
+
+            local hum = target:FindFirstChildOfClass("Humanoid")
+            if not hum or hum.Health <= 0 then
+                -- Target Mati (Health 0)
+                trapFolder:Destroy()
+                break
+            end
+
+            task.wait(0.1) -- Cek status setiap 0.1 detik
+        end
+
+        -- Cleanup akhir: Pastikan trap dihapus jika waktu habis (fallback)
+        if trapFolder and trapFolder.Parent then
+            trapFolder:Destroy()
+        end
+    end)
 end
 
 -- ===== TARGET HELPERS =====
@@ -1264,7 +1290,7 @@ end)
 -- ===== [NEW] AUTO H MOVE LOOP (Custom Remote) =====
 task.spawn(function()
     while true do
-        task.wait(1.5)
+        task.wait(1)
         if IsSummoningAction then continue end 
 
         if not AutoHMove then
@@ -1535,3 +1561,4 @@ task.spawn(function()
         end
     end
 end)
+Rayfield:LoadConfiguration()
