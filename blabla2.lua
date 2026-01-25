@@ -28,11 +28,11 @@ local HMoveFollow = false
 local HMoveTargetList = {}
 local CurrentHMoveTarget = nil
 
--- [NEW] AUTO KANEKI VARIABLE
-local AutoKaneki = false
-local KanekiFollow = false
-local KanekiTargetList = {}
-local CurrentKanekiTarget = nil
+-- [NEW] AUTO GILGAMESH VARIABLE
+local AutoGilgamesh = false
+local GilgameshFollow = false
+local GilgameshTargetList = {}
+local CurrentGilgameshTarget = nil
 
 -- NEW VARIABLE: AUTO KING MON & BBQ3
 local AutoKingMon = false 
@@ -85,8 +85,8 @@ local LootingActive = false
 local function UseFold(duration)
     local start = os.clock()
     while os.clock() - start < duration do
-        -- [UPDATE] Added AutoKaneki check
-        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove and not AutoKaneki) then return end
+        -- [UPDATE] Added AutoHMove and AutoGilgamesh check
+        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove and not AutoGilgamesh) then return end
         if IsSummoningAction then return end 
 
         pcall(function()
@@ -201,8 +201,8 @@ end
 -- ===== FORCE KILL VIA MAP VOID =====
 local function ForceKillByVoid()
     local startTime = os.clock()
-    -- [UPDATE] Added AutoKaneki check
-    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoKaneki) and (os.clock() - startTime < 10) do 
+    -- [UPDATE] Added AutoHMove and AutoGilgamesh check
+    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh) and (os.clock() - startTime < 10) do 
         if IsSummoningAction then return end
 
         local char = LocalPlayer.Character
@@ -241,7 +241,7 @@ end
 
 -- ===== UI WINDOW =====
 local Window = Rayfield:CreateWindow({
-    Name = "Auto Gojo & Kaneki [All Moves]",
+    Name = "Auto Gojo [All Moves]",
     LoadingTitle = "System Loaded",
     LoadingSubtitle = "Full Features",
     ConfigurationSaving = {
@@ -324,7 +324,7 @@ local ZMoveDropdown = Tab:CreateDropdown({
     end
 })
 
--- H MOVE DROPDOWN
+-- [NEW] H MOVE DROPDOWN
 local HMoveDropdown = Tab:CreateDropdown({
     Name = "H Move Target",
     Options = GetTargets(),
@@ -340,18 +340,18 @@ local HMoveDropdown = Tab:CreateDropdown({
     end
 })
 
--- [NEW] KANEKI DROPDOWN
-local KanekiDropdown = Tab:CreateDropdown({
-    Name = "Kaneki Target (Blood Farm)",
+-- [NEW] GILGAMESH DROPDOWN
+local GilgameshDropdown = Tab:CreateDropdown({
+    Name = "Gilgamesh Target",
     Options = GetTargets(),
     CurrentOption = {},
     MultipleOptions = true,
     Multi = true,
-    Flag = "KanekiTargets", 
+    Flag = "GilgameshTargets", 
     Callback = function(opts)
-        KanekiTargetList = opts
-        if not CurrentKanekiTarget then
-            CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
+        GilgameshTargetList = opts
+        if not CurrentGilgameshTarget then
+            CurrentGilgameshTarget = GetValidTargetFromList(GilgameshTargetList)
         end
     end
 })
@@ -365,7 +365,7 @@ Tab:CreateButton({
         if PurpleDropdown then PurpleDropdown:Refresh(newTargets, PurpleTargetList) end
         if ZMoveDropdown then ZMoveDropdown:Refresh(newTargets, ZMoveTargetList) end
         if HMoveDropdown then HMoveDropdown:Refresh(newTargets, HMoveTargetList) end
-        if KanekiDropdown then KanekiDropdown:Refresh(newTargets, KanekiTargetList) end
+        if GilgameshDropdown then GilgameshDropdown:Refresh(newTargets, GilgameshTargetList) end
     end
 })
 
@@ -382,7 +382,7 @@ Tab:CreateToggle({
             if AutoRed then AutoRed = false end
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
-            if AutoKaneki then AutoKaneki = false end
+            if AutoGilgamesh then AutoGilgamesh = false end
         else
             CounterFollow = false
             PurpleFollow = false
@@ -403,7 +403,7 @@ Tab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
-            if AutoKaneki then AutoKaneki = false end
+            if AutoGilgamesh then AutoGilgamesh = false end
         end
     end
 })
@@ -422,12 +422,12 @@ Tab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoRed then AutoRed = false end
             if AutoHMove then AutoHMove = false end
-            if AutoKaneki then AutoKaneki = false end
+            if AutoGilgamesh then AutoGilgamesh = false end
         end
     end
 })
 
--- H MOVE TOGGLE
+-- [NEW] H MOVE TOGGLE
 Tab:CreateToggle({
     Name = "Auto H Move",
     CurrentValue = false,
@@ -441,20 +441,20 @@ Tab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoRed then AutoRed = false end
             if AutoZMove then AutoZMove = false end
-            if AutoKaneki then AutoKaneki = false end
+            if AutoGilgamesh then AutoGilgamesh = false end
         end
     end
 })
 
--- [NEW] KANEKI TOGGLE
+-- [NEW] GILGAMESH TOGGLE
 Tab:CreateToggle({
-    Name = "Auto Kaneki (Blood > Move B)",
+    Name = "Auto Gilgamesh",
     CurrentValue = false,
-    Flag = "AutoKaneki", 
+    Flag = "AutoGilgamesh", 
     Callback = function(v)
-        AutoKaneki = v
+        AutoGilgamesh = v
         if not v then
-            KanekiFollow = false
+            GilgameshFollow = false
         else
             if AutoGojo then AutoGojo = false end
             if AutoGojoRework then AutoGojoRework = false end
@@ -528,8 +528,8 @@ UtilityTab:CreateToggle({
             CounterFollow = false
             PurpleFollow = false
             ZMoveFollow = false
-            HMoveFollow = false
-            KanekiFollow = false
+            HMoveFollow = false 
+            GilgameshFollow = false
             LootingActive = false 
             Rayfield:Notify({Title = "System", Content = "Auto King Mon ON.", Duration = 3})
         else
@@ -552,8 +552,8 @@ UtilityTab:CreateToggle({
             CounterFollow = false
             PurpleFollow = false
             ZMoveFollow = false
-            HMoveFollow = false
-            KanekiFollow = false
+            HMoveFollow = false 
+            GilgameshFollow = false
             LootingActive = false 
             Rayfield:Notify({Title = "System", Content = "Auto BBQ3 ON. Checking Resources...", Duration = 3})
         else
@@ -647,7 +647,7 @@ OldTab:CreateToggle({
             if AutoGojoRework then AutoGojoRework = false end
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
-            if AutoKaneki then AutoKaneki = false end
+            if AutoGilgamesh then AutoGilgamesh = false end
         end
     end
 })
@@ -700,12 +700,11 @@ RunService.Heartbeat:Connect(function()
             hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(-20, 26, 0), thrp.Position)
         end
 
-    -- [UPDATE] SEPARATED BLOCKS FOR Z & H
-
-    -- 1. Hollow Purple & Red Move Only
-    elseif HollowFollow or RedFollow then
+    -- 1. Hollow Purple & Red & Gilgamesh Move Only
+    elseif HollowFollow or RedFollow or GilgameshFollow then
         local activeTarget = nil
         if AutoRed then activeTarget = CurrentRedTarget
+        elseif AutoGilgamesh then activeTarget = CurrentGilgameshTarget
         else activeTarget = CurrentGojoTarget
         end
 
@@ -721,7 +720,6 @@ RunService.Heartbeat:Connect(function()
         local activeTarget = CurrentZMoveTarget
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
             local thrp = activeTarget.HumanoidRootPart
-            -- You can change Z Move Offset here specifically
             hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(-35, 50, 0), thrp.Position)
             hrp.Velocity = Vector3.zero 
             hrp.AssemblyLinearVelocity = Vector3.zero
@@ -732,19 +730,7 @@ RunService.Heartbeat:Connect(function()
         local activeTarget = CurrentHMoveTarget
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
             local thrp = activeTarget.HumanoidRootPart
-            -- You can change H Move Offset here specifically
             hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(0, -15, 0), thrp.Position)
-            hrp.Velocity = Vector3.zero 
-            hrp.AssemblyLinearVelocity = Vector3.zero
-        end
-
-    -- 4. [NEW] Kaneki Follow (Close for LMB)
-    elseif KanekiFollow then
-        local activeTarget = CurrentKanekiTarget
-        if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
-            local thrp = activeTarget.HumanoidRootPart
-            -- Behind 3 studs so punch connects
-            hrp.CFrame = CFrame.new(thrp.Position + (thrp.CFrame.LookVector * -3), thrp.Position)
             hrp.Velocity = Vector3.zero 
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
@@ -763,7 +749,7 @@ end)
 -- ===== AUTO MASTERY & BREAKTHROUGH =====
 task.spawn(function()
     while true do
-        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoKaneki then
+        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh then
             task.wait(3) 
         else
             task.wait(1.5)
@@ -1264,10 +1250,10 @@ task.spawn(function()
     end
 end)
 
--- ===== AUTO H MOVE LOOP (Custom Remote) =====
+-- ===== [NEW] AUTO H MOVE LOOP (Custom Remote) =====
 task.spawn(function()
     while true do
-        task.wait(1.5)
+        task.wait(0.1)
         if IsSummoningAction then continue end 
 
         if not AutoHMove then
@@ -1298,7 +1284,6 @@ task.spawn(function()
         task.wait(0.5)
 
         pcall(function()
-            -- [NEW] REPLACED REMOTE ARGS
             local args = {
                 buffer.fromstring("\022"),
                 buffer.fromstring("\254\001\000\006\001H")
@@ -1315,83 +1300,57 @@ task.spawn(function()
     end
 end)
 
--- ===== [NEW] AUTO KANEKI LOOP =====
+-- ===== [NEW] AUTO GILGAMESH LOOP =====
 task.spawn(function()
     while true do
-        task.wait(1)
+        task.wait(0.1)
         if IsSummoningAction then continue end 
 
-        if not AutoKaneki then
-            KanekiFollow = false
+        if not AutoGilgamesh then
+            GilgameshFollow = false
             continue
         end
 
-        CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
+        CurrentGilgameshTarget = GetValidTargetFromList(GilgameshTargetList)
 
-        if not CurrentKanekiTarget then
-             KanekiFollow = false
+        if not CurrentGilgameshTarget then
+             GilgameshFollow = false
              repeat
                 task.wait(0.1)
-                CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
-             until not AutoKaneki or CurrentKanekiTarget or IsSummoningAction
+                CurrentGilgameshTarget = GetValidTargetFromList(GilgameshTargetList)
+             until not AutoGilgamesh or CurrentGilgameshTarget or IsSummoningAction
              
-             if not AutoKaneki or IsSummoningAction then continue end
+             if not AutoGilgamesh or IsSummoningAction then continue end
         end
 
         local char = LocalPlayer.Character
         if not char then continue end
 
-        -- Cek Folder Living Player untuk BloodBar
-        local playerLiving = Workspace:FindFirstChild("Living") and Workspace.Living:FindFirstChild(LocalPlayer.Name)
-        local usedValues = playerLiving and playerLiving:FindFirstChild("UsedValues")
-        local bloodBar = usedValues and usedValues:FindFirstChild("Kaneki_BloodBar")
-
-        if not bloodBar then
-            -- Jika tidak ketemu (mungkin belum spawn/mati), tunggu sebentar
-            task.wait(1)
-            continue
-        end
-
-        UseFold(0.1) -- Menggunakan Fold agar tidak jatuh/stuck
-        if not AutoKaneki then continue end
+        UseFold(0.1)
+        if not AutoGilgamesh then continue end
         task.wait(0.001)
 
-        KanekiFollow = true
-        task.wait(0.2)
+        GilgameshFollow = true
+        task.wait(0.5)
 
-        -- LOGIKA KANEKI (BLOOD CHECK)
-        if bloodBar.Value < 60 then
-            -- Loop Farming Blood pakai LMB sampai 60
-            while AutoKaneki and IsTargetAlive(CurrentKanekiTarget) and bloodBar.Value < 60 do
-                pcall(function()
-                    local args = {
-                        buffer.fromstring("\022"),
-                        buffer.fromstring("\254\001\000\006\003LMB")
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
-                end)
-                task.wait(0.35) -- Delay antar pukulan
-            end
-        end
-
-        -- Cek lagi apakah masih aktif dan target hidup setelah farming
-        if AutoKaneki and IsTargetAlive(CurrentKanekiTarget) then
-            task.wait(0.2)
-            -- EKSEKUSI JURUS B (Saat Blood >= 60)
-            pcall(function()
+        pcall(function()
+            if CurrentGilgameshTarget then
+                local targetName = CurrentGilgameshTarget.Name
                 local args = {
                     buffer.fromstring("\022"),
-                    buffer.fromstring("\254\001\000\006\001B")
+                    buffer.fromstring("\254\003\000\006\001T\255\001\004\000\000\000\000:\248\216?"),
+                    {
+                        workspace:WaitForChild("Living"):WaitForChild(targetName, 10)
+                    }
                 }
                 game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
-            end)
-            task.wait(2) -- Tunggu animasi jurus selesai
-        end
+            end
+        end)
 
-        KanekiFollow = false
-        
-        -- Reset karakter (Force Kill) agar cooldown reset (Sama seperti Auto Red)
-        if AutoKaneki and not IsSummoningAction then
+        task.wait(1)
+
+        GilgameshFollow = false
+        if AutoGilgamesh and not IsSummoningAction then
             ForceKillByVoid()
         end
     end
@@ -1409,8 +1368,8 @@ task.spawn(function()
             continue 
         end
         
-        -- [UPDATE] Added HMoveFollow & KanekiFollow
-        if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or KanekiFollow then
+        -- [UPDATE] Added HMoveFollow & GilgameshFollow
+        if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or GilgameshFollow then
             LootingActive = false
             continue
         end
@@ -1426,7 +1385,7 @@ task.spawn(function()
             for _, item in ipairs(items) do
                 if not AutoLootRework then break end
                 if IsSummoningAction then break end
-                if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or KanekiFollow then break end
+                if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or GilgameshFollow then break end
 
                 local itemName = item.Name
                 local nameVal = item:FindFirstChild("ItemName") or (item:FindFirstChild("ItemDrop") and item.ItemDrop:FindFirstChild("ItemName"))
@@ -1483,12 +1442,13 @@ task.spawn(function()
             if AutoZMove and (not CurrentZMoveTarget or not IsTargetAlive(CurrentZMoveTarget)) then
                 CurrentZMoveTarget = GetValidTargetFromList(ZMoveTargetList)
             end
+            -- [NEW] H MOVE REFRESH
             if AutoHMove and (not CurrentHMoveTarget or not IsTargetAlive(CurrentHMoveTarget)) then
                 CurrentHMoveTarget = GetValidTargetFromList(HMoveTargetList)
             end
-            -- [NEW] KANEKI REFRESH
-            if AutoKaneki and (not CurrentKanekiTarget or not IsTargetAlive(CurrentKanekiTarget)) then
-                CurrentKanekiTarget = GetValidTargetFromList(KanekiTargetList)
+            -- [NEW] GILGAMESH REFRESH
+            if AutoGilgamesh and (not CurrentGilgameshTarget or not IsTargetAlive(CurrentGilgameshTarget)) then
+                CurrentGilgameshTarget = GetValidTargetFromList(GilgameshTargetList)
             end
             if AutoGojoRework then
                  if not CurrentCounterTarget or not IsTargetAlive(CurrentCounterTarget) then
