@@ -1346,7 +1346,7 @@ task.spawn(function()
             end
         end)
 
-        task.wait(1)
+        task.wait(1.2)
 
         GilgameshFollow = false
         if AutoGilgamesh and not IsSummoningAction then
