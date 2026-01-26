@@ -33,6 +33,12 @@ local GilgameshFollow = false
 local GilgameshTargetList = {}
 local CurrentGilgameshTarget = nil
 
+-- [NEW] AUTO COMBO QZG VARIABLE
+local AutoComboQZG = false
+local ComboFollow = false
+local ComboTargetList = {}
+local CurrentComboTarget = nil
+
 -- NEW VARIABLE: AUTO KING MON & BBQ3
 local AutoKingMon = false 
 local AutoBBQ3 = false 
@@ -84,8 +90,8 @@ local LootingActive = false
 local function UseFold(duration)
     local start = os.clock()
     while os.clock() - start < duration do
-        -- [UPDATE] Added AutoHMove and AutoGilgamesh check
-        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove and not AutoGilgamesh) then return end
+        -- [UPDATE] Added Checks
+        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove and not AutoGilgamesh and not AutoComboQZG) then return end
         if IsSummoningAction then return end 
 
         pcall(function()
@@ -200,8 +206,8 @@ end
 -- ===== FORCE KILL VIA MAP VOID =====
 local function ForceKillByVoid()
     local startTime = os.clock()
-    -- [UPDATE] Added AutoHMove and AutoGilgamesh check
-    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh) and (os.clock() - startTime < 10) do 
+    -- [UPDATE] Added AutoComboQZG
+    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh or AutoComboQZG) and (os.clock() - startTime < 10) do 
         if IsSummoningAction then return end
 
         local char = LocalPlayer.Character
@@ -355,6 +361,22 @@ local GilgameshDropdown = Tab:CreateDropdown({
     end
 })
 
+-- [NEW] COMBO QZG DROPDOWN
+local ComboDropdown = Tab:CreateDropdown({
+    Name = "Combo QZG Target",
+    Options = GetTargets(),
+    CurrentOption = {},
+    MultipleOptions = true,
+    Multi = true,
+    Flag = "ComboQZGTargets", 
+    Callback = function(opts)
+        ComboTargetList = opts
+        if not CurrentComboTarget then
+            CurrentComboTarget = GetValidTargetFromList(ComboTargetList)
+        end
+    end
+})
+
 Tab:CreateButton({
     Name = "Refresh Target Lists",
     Callback = function()
@@ -365,6 +387,7 @@ Tab:CreateButton({
         if ZMoveDropdown then ZMoveDropdown:Refresh(newTargets, ZMoveTargetList) end
         if HMoveDropdown then HMoveDropdown:Refresh(newTargets, HMoveTargetList) end
         if GilgameshDropdown then GilgameshDropdown:Refresh(newTargets, GilgameshTargetList) end
+        if ComboDropdown then ComboDropdown:Refresh(newTargets, ComboTargetList) end
     end
 })
 
@@ -382,6 +405,7 @@ Tab:CreateToggle({
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
+            if AutoComboQZG then AutoComboQZG = false end
         else
             CounterFollow = false
             PurpleFollow = false
@@ -403,6 +427,7 @@ Tab:CreateToggle({
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
+            if AutoComboQZG then AutoComboQZG = false end
         end
     end
 })
@@ -422,6 +447,7 @@ Tab:CreateToggle({
             if AutoRed then AutoRed = false end
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
+            if AutoComboQZG then AutoComboQZG = false end
         end
     end
 })
@@ -441,6 +467,7 @@ Tab:CreateToggle({
             if AutoRed then AutoRed = false end
             if AutoZMove then AutoZMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
+            if AutoComboQZG then AutoComboQZG = false end
         end
     end
 })
@@ -460,6 +487,27 @@ Tab:CreateToggle({
             if AutoRed then AutoRed = false end
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
+            if AutoComboQZG then AutoComboQZG = false end
+        end
+    end
+})
+
+-- [NEW] COMBO QZG TOGGLE
+Tab:CreateToggle({
+    Name = "Auto Combo QZG (Q->Z->G)",
+    CurrentValue = false,
+    Flag = "AutoComboQZG", 
+    Callback = function(v)
+        AutoComboQZG = v
+        if not v then
+            ComboFollow = false
+        else
+            if AutoGojo then AutoGojo = false end
+            if AutoGojoRework then AutoGojoRework = false end
+            if AutoRed then AutoRed = false end
+            if AutoZMove then AutoZMove = false end
+            if AutoHMove then AutoHMove = false end
+            if AutoGilgamesh then AutoGilgamesh = false end
         end
     end
 })
@@ -529,6 +577,7 @@ UtilityTab:CreateToggle({
             ZMoveFollow = false
             HMoveFollow = false 
             GilgameshFollow = false
+            ComboFollow = false
             LootingActive = false 
             Rayfield:Notify({Title = "System", Content = "Auto King Mon ON.", Duration = 3})
         else
@@ -553,6 +602,7 @@ UtilityTab:CreateToggle({
             ZMoveFollow = false
             HMoveFollow = false 
             GilgameshFollow = false
+            ComboFollow = false
             LootingActive = false 
             Rayfield:Notify({Title = "System", Content = "Auto BBQ3 ON. Checking Resources...", Duration = 3})
         else
@@ -647,6 +697,7 @@ OldTab:CreateToggle({
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
+            if AutoComboQZG then AutoComboQZG = false end
         end
     end
 })
@@ -699,11 +750,12 @@ RunService.Heartbeat:Connect(function()
             hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(-20, 26, 0), thrp.Position)
         end
 
-    -- 1. Hollow Purple & Red & Gilgamesh Move Only
-    elseif HollowFollow or RedFollow or GilgameshFollow then
+    -- 1. Hollow Purple & Red & Gilgamesh & ComboQZG Move
+    elseif HollowFollow or RedFollow or GilgameshFollow or ComboFollow then
         local activeTarget = nil
         if AutoRed then activeTarget = CurrentRedTarget
         elseif AutoGilgamesh then activeTarget = CurrentGilgameshTarget
+        elseif AutoComboQZG then activeTarget = CurrentComboTarget
         else activeTarget = CurrentGojoTarget
         end
 
@@ -748,7 +800,7 @@ end)
 -- ===== AUTO MASTERY & BREAKTHROUGH =====
 task.spawn(function()
     while true do
-        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh then
+        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh or AutoComboQZG then
             task.wait(3) 
         else
             task.wait(1.5)
@@ -1367,8 +1419,8 @@ task.spawn(function()
             continue 
         end
         
-        -- [UPDATE] Added HMoveFollow & GilgameshFollow
-        if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or GilgameshFollow then
+        -- [UPDATE] Added Checks
+        if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or GilgameshFollow or ComboFollow then
             LootingActive = false
             continue
         end
@@ -1384,7 +1436,7 @@ task.spawn(function()
             for _, item in ipairs(items) do
                 if not AutoLootRework then break end
                 if IsSummoningAction then break end
-                if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or GilgameshFollow then break end
+                if FollowTarget or HollowFollow or RedFollow or CounterFollow or PurpleFollow or ZMoveFollow or HMoveFollow or GilgameshFollow or ComboFollow then break end
 
                 local itemName = item.Name
                 local nameVal = item:FindFirstChild("ItemName") or (item:FindFirstChild("ItemDrop") and item.ItemDrop:FindFirstChild("ItemName"))
@@ -1448,6 +1500,10 @@ task.spawn(function()
             -- [NEW] GILGAMESH REFRESH
             if AutoGilgamesh and (not CurrentGilgameshTarget or not IsTargetAlive(CurrentGilgameshTarget)) then
                 CurrentGilgameshTarget = GetValidTargetFromList(GilgameshTargetList)
+            end
+            -- [NEW] COMBO QZG REFRESH
+            if AutoComboQZG and (not CurrentComboTarget or not IsTargetAlive(CurrentComboTarget)) then
+                CurrentComboTarget = GetValidTargetFromList(ComboTargetList)
             end
             if AutoGojoRework then
                  if not CurrentCounterTarget or not IsTargetAlive(CurrentCounterTarget) then
@@ -1582,4 +1638,89 @@ task.spawn(function()
         end
     end
 end)
+
+-- ===== [NEW] AUTO COMBO QZG LOOP =====
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if IsSummoningAction then continue end 
+
+        -- Cek Toggle
+        if not AutoComboQZG then
+            ComboFollow = false
+            continue
+        end
+
+        -- Cari Target
+        CurrentComboTarget = GetValidTargetFromList(ComboTargetList)
+
+        if not CurrentComboTarget then
+             ComboFollow = false
+             repeat
+                task.wait(0.1)
+                CurrentComboTarget = GetValidTargetFromList(ComboTargetList)
+             until not AutoComboQZG or CurrentComboTarget or IsSummoningAction
+             
+             if not AutoComboQZG or IsSummoningAction then continue end
+        end
+
+        local char = LocalPlayer.Character
+        if not char then continue end
+
+        -- 1. REMOTE Q (Sebagai pengganti Fold)
+        pcall(function()
+            local args = {
+                buffer.fromstring("\022"),
+                buffer.fromstring("\254\001\000\006\001Q")
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
+        end)
+        
+        if not AutoComboQZG then continue end
+        
+        -- 2. CEK COOLDOWN Z
+        -- Script akan diam di sini sampai Z_Cooldown hilang dari folder WhyIsItHere
+        local whyFolder = LocalPlayer:FindFirstChild("WhyIsItHere")
+        if whyFolder then
+            while whyFolder:FindFirstChild("Z_Cooldown") do
+                if not AutoComboQZG then break end
+                -- Optional: Bisa tambahkan print("Waiting for Z Cooldown...") untuk debug
+                task.wait(0.1)
+            end
+        end
+
+        if not AutoComboQZG then continue end
+
+        -- 3. REMOTE Z (Dieksekusi setelah cooldown hilang)
+        local argsZ = {
+            buffer.fromstring("\023"),
+            buffer.fromstring("\254\001\000\006\001Z")
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(argsZ))
+        
+        task.wait(0.1) -- Delay kecil agar animasi server register
+
+        -- 4. MULAI TELEPORT KE TARGET
+        ComboFollow = true
+        task.wait(0.2) -- Tunggu sebentar sampai posisi sudah di dekat target
+
+        -- 5. REMOTE G (Sebagai pengganti Attack)
+        pcall(function()
+            local argsG = {
+                buffer.fromstring("\023"),
+                buffer.fromstring("\254\001\000\006\001G")
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(argsG))
+        end)
+
+        task.wait(12) -- Delay sebelum reset/kill
+
+        -- Reset State & Force Kill
+        ComboFollow = false
+        if AutoComboQZG and not IsSummoningAction then
+            ForceKillByVoid()
+        end
+    end
+end)
+
 Rayfield:LoadConfiguration()
