@@ -733,7 +733,7 @@ RunService.Heartbeat:Connect(function()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- === LOGIC TELEPORT BARU ===
+    -- === 1. COUNTER FOLLOW ===
     if CounterFollow then
         local target = CurrentCounterTarget
         if target and target:FindFirstChild("HumanoidRootPart") then
@@ -743,6 +743,7 @@ RunService.Heartbeat:Connect(function()
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
 
+    -- === 2. PURPLE FOLLOW ===
     elseif PurpleFollow then
         local target = CurrentPurpleTarget
         if target and target:FindFirstChild("HumanoidRootPart") then
@@ -750,14 +751,30 @@ RunService.Heartbeat:Connect(function()
             hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(-20, 26, 0), thrp.Position)
         end
 
-    -- 1. Hollow Purple & Red & Gilgamesh & ComboQZG Move
-    elseif HollowFollow or RedFollow or GilgameshFollow or ComboFollow then
-        local activeTarget = nil
-        if AutoRed then activeTarget = CurrentRedTarget
-        elseif AutoGilgamesh then activeTarget = CurrentGilgameshTarget
-        elseif AutoComboQZG then activeTarget = CurrentComboTarget
-        else activeTarget = CurrentGojoTarget
+    -- === 3. [BARU] COMBO QZG FOLLOW (Samping Kanan + Menghadap Musuh) ===
+    elseif ComboFollow then
+        local activeTarget = CurrentComboTarget
+        if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
+            local thrp = activeTarget.HumanoidRootPart
+            hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(0, 26, 0), thrp.Position)
+            hrp.Velocity = Vector3.zero 
+            hrp.AssemblyLinearVelocity = Vector3.zero
         end
+
+    -- === 4. [TERPISAH] GILGAMESH FOLLOW (Atas Kepala) ===
+    elseif GilgameshFollow then
+        local activeTarget = CurrentGilgameshTarget
+        if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
+            local thrp = activeTarget.HumanoidRootPart
+            hrp.CFrame = CFrame.new(thrp.Position + Vector3.new(0, 26, 0), thrp.Position)
+            hrp.Velocity = Vector3.zero 
+            hrp.AssemblyLinearVelocity = Vector3.zero
+        end
+
+    -- === 5. [TERPISAH] RED / HOLLOW (Atas Kepala) ===
+    elseif HollowFollow or RedFollow then
+        local activeTarget = nil
+        if AutoRed then activeTarget = CurrentRedTarget else activeTarget = CurrentGojoTarget end
 
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
             local thrp = activeTarget.HumanoidRootPart
@@ -766,7 +783,7 @@ RunService.Heartbeat:Connect(function()
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
 
-    -- 2. Z Move Follow (SEPARATED)
+    -- === 6. Z MOVE FOLLOW ===
     elseif ZMoveFollow then
         local activeTarget = CurrentZMoveTarget
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
@@ -776,7 +793,7 @@ RunService.Heartbeat:Connect(function()
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
 
-    -- 3. H Move Follow (SEPARATED)
+    -- === 7. H MOVE FOLLOW ===
     elseif HMoveFollow then
         local activeTarget = CurrentHMoveTarget
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
@@ -786,6 +803,7 @@ RunService.Heartbeat:Connect(function()
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
 
+    -- === 8. DEFAULT FOLLOW ===
     elseif FollowTarget then
         local activeTarget = CurrentGojoTarget
         if activeTarget and activeTarget:FindFirstChild("HumanoidRootPart") then
@@ -1692,11 +1710,13 @@ task.spawn(function()
         if not AutoComboQZG then continue end
 
         -- 3. REMOTE Z (Dieksekusi setelah cooldown hilang)
-        local argsZ = {
-            buffer.fromstring("\023"),
-            buffer.fromstring("\254\001\000\006\001Z")
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(argsZ))
+        pcall(function()
+            local args = {
+                buffer.fromstring("\022"),
+                buffer.fromstring("\254\001\000\006\001Z")
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
+        end)
         
         task.wait(0.1) -- Delay kecil agar animasi server register
 
@@ -1706,11 +1726,11 @@ task.spawn(function()
 
         -- 5. REMOTE G (Sebagai pengganti Attack)
         pcall(function()
-            local argsG = {
-                buffer.fromstring("\023"),
+            local args = {
+                buffer.fromstring("\022"),
                 buffer.fromstring("\254\001\000\006\001G")
             }
-            game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(argsG))
+            game:GetService("ReplicatedStorage"):WaitForChild("ABC - First Priority"):WaitForChild("Utility"):WaitForChild("Modules"):WaitForChild("Warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(unpack(args))
         end)
 
         task.wait(12) -- Delay sebelum reset/kill
