@@ -39,10 +39,13 @@ local ComboFollow = false
 local ComboTargetList = {}
 local CurrentComboTarget = nil
 
--- NEW VARIABLE: AUTO KING MON & BBQ3
+-- NEW VARIABLE: AUTO KING MON & BBQ3 & DEKU
 local AutoKingMon = false 
 local AutoBBQ3 = false 
+local AutoDeku = false -- NEW
 local IsSummoningAction = false 
+local IsSummoningActionDeku = false -- NEW
+local PreviousStandSlot = nil -- NEW
 
 -- Teleport State Variables
 local FollowTarget = false
@@ -91,8 +94,9 @@ local function UseFold(duration)
     local start = os.clock()
     while os.clock() - start < duration do
         -- [UPDATE] Added Checks
-        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove and not AutoGilgamesh and not AutoComboQZG) then return end
+        if (not AutoGojo and not AutoRed and not AutoGojoRework and not AutoZMove and not AutoHMove and not AutoGilgamesh and not AutoComboQZG and not AutoDeku) then return end
         if IsSummoningAction then return end 
+        if IsSummoningActionDeku then return end
 
         pcall(function()
             Gojo.Fold:FireServer()
@@ -104,8 +108,9 @@ end
 local function UseHeal(duration)
     local start = os.clock()
     while os.clock() - start < duration do
-        if not AutoGojo and not AutoGojoRework then return end
+        if not AutoGojo and not AutoGojoRework and not AutoDeku then return end
         if IsSummoningAction then return end
+        if IsSummoningActionDeku then return end
         pcall(function()
             Gojo.Heal:FireServer()
         end)
@@ -114,8 +119,9 @@ local function UseHeal(duration)
 end
 
 local function UseResurrect()
-    if not AutoGojo and not AutoGojoRework then return end
+    if not AutoGojo and not AutoGojoRework and not AutoDeku then return end
     if IsSummoningAction then return end
+    if IsSummoningActionDeku then return end
     pcall(function()
         Gojo.Resurrect:FireServer()
     end)
@@ -206,9 +212,10 @@ end
 -- ===== FORCE KILL VIA MAP VOID =====
 local function ForceKillByVoid()
     local startTime = os.clock()
-    -- [UPDATE] Added AutoComboQZG
-    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh or AutoComboQZG) and (os.clock() - startTime < 10) do 
+    -- [UPDATE] Added AutoComboQZG and AutoDeku
+    while (AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh or AutoComboQZG or AutoDeku) and (os.clock() - startTime < 10) do 
         if IsSummoningAction then return end
+        if IsSummoningActionDeku then return end
 
         local char = LocalPlayer.Character
         if not char then
@@ -241,6 +248,34 @@ local function ForceKillByVoid()
         end
 
         task.wait(0.25)
+    end
+end
+
+-- ===== [NEW] FUNCTION TO FIND SLOT WITH VALUE 123 =====
+local function FindSlotWithValue123()
+    local data = LocalPlayer:FindFirstChild("Data")
+    if not data then return nil end
+    
+    for _, child in ipairs(data:GetChildren()) do
+        if child:IsA("IntValue") and child.Value == 123 then
+            return child.Name -- Return slot name
+        end
+    end
+    return nil
+end
+
+-- ===== [NEW] FUNCTION TO GET CURRENT STAND SLOT BASED ON ACTIVE MODE =====
+local function GetCurrentStandSlot()
+    if AutoGojo then
+        return "64" -- gojo slot
+    elseif AutoGilgamesh then
+        return "193" -- gilgamesh slot
+    elseif AutoZMove or AutoHMove then
+        return "249" -- auto z/h slot
+    elseif AutoComboQZG then
+        return "244" -- auto combo qzg slot
+    else
+        return nil -- no active mode
     end
 end
 
@@ -406,6 +441,7 @@ Tab:CreateToggle({
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
             if AutoComboQZG then AutoComboQZG = false end
+            if AutoDeku then AutoDeku = false end
         else
             CounterFollow = false
             PurpleFollow = false
@@ -428,6 +464,7 @@ Tab:CreateToggle({
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
             if AutoComboQZG then AutoComboQZG = false end
+            if AutoDeku then AutoDeku = false end
         end
     end
 })
@@ -448,6 +485,7 @@ Tab:CreateToggle({
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
             if AutoComboQZG then AutoComboQZG = false end
+            if AutoDeku then AutoDeku = false end
         end
     end
 })
@@ -468,6 +506,7 @@ Tab:CreateToggle({
             if AutoZMove then AutoZMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
             if AutoComboQZG then AutoComboQZG = false end
+            if AutoDeku then AutoDeku = false end
         end
     end
 })
@@ -488,6 +527,7 @@ Tab:CreateToggle({
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
             if AutoComboQZG then AutoComboQZG = false end
+            if AutoDeku then AutoDeku = false end
         end
     end
 })
@@ -508,6 +548,7 @@ Tab:CreateToggle({
             if AutoZMove then AutoZMove = false end
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
+            if AutoDeku then AutoDeku = false end
         end
     end
 })
@@ -569,6 +610,7 @@ UtilityTab:CreateToggle({
         AutoKingMon = v
         if v then
             if AutoBBQ3 then AutoBBQ3 = false end 
+            if AutoDeku then AutoDeku = false end
             FollowTarget = false
             RedFollow = false
             HollowFollow = false
@@ -594,6 +636,7 @@ UtilityTab:CreateToggle({
         AutoBBQ3 = v
         if v then
             if AutoKingMon then AutoKingMon = false end 
+            if AutoDeku then AutoDeku = false end
             FollowTarget = false
             RedFollow = false
             HollowFollow = false
@@ -608,6 +651,36 @@ UtilityTab:CreateToggle({
         else
             IsSummoningAction = false
             Rayfield:Notify({Title = "System", Content = "Auto BBQ3 Stopped.", Duration = 3})
+        end
+    end
+})
+
+-- [NEW] AUTO DEKU TOGGLE
+UtilityTab:CreateToggle({
+    Name = "Auto Summon Deku",
+    CurrentValue = false,
+    Flag = "AutoDeku", 
+    Callback = function(v)
+        AutoDeku = v
+        if v then
+            -- Matikan semua fitur lain
+            if AutoKingMon then AutoKingMon = false end
+            if AutoBBQ3 then AutoBBQ3 = false end
+            FollowTarget = false
+            RedFollow = false
+            HollowFollow = false
+            CounterFollow = false
+            PurpleFollow = false
+            ZMoveFollow = false
+            HMoveFollow = false
+            GilgameshFollow = false
+            ComboFollow = false
+            LootingActive = false
+            IsSummoningAction = false
+            Rayfield:Notify({Title = "System", Content = "Auto Deku ON. Checking for Deku...", Duration = 3})
+        else
+            IsSummoningActionDeku = false
+            Rayfield:Notify({Title = "System", Content = "Auto Deku Stopped.", Duration = 3})
         end
     end
 })
@@ -698,6 +771,7 @@ OldTab:CreateToggle({
             if AutoHMove then AutoHMove = false end
             if AutoGilgamesh then AutoGilgamesh = false end
             if AutoComboQZG then AutoComboQZG = false end
+            if AutoDeku then AutoDeku = false end
         end
     end
 })
@@ -726,6 +800,7 @@ end
 -- =======================================================
 RunService.Heartbeat:Connect(function()
     if IsSummoningAction then return end 
+    if IsSummoningActionDeku then return end
     if LootingActive then return end 
 
     local char = LocalPlayer.Character
@@ -818,7 +893,7 @@ end)
 -- ===== AUTO MASTERY & BREAKTHROUGH =====
 task.spawn(function()
     while true do
-        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh or AutoComboQZG then
+        if AutoGojo or AutoRed or AutoGojoRework or AutoZMove or AutoHMove or AutoGilgamesh or AutoComboQZG or AutoDeku then
             task.wait(3) 
         else
             task.wait(1.5)
@@ -1128,11 +1203,152 @@ task.spawn(function()
     end
 end)
 
+-- ===== [NEW] AUTO DEKU SUMMON LOGIC =====
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if not AutoDeku then 
+            IsSummoningActionDeku = false
+            continue 
+        end
+
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not char or not hrp then continue end
+
+        -- Cek apakah Deku sudah ada di Workspace.Living
+        local deku = Workspace:FindFirstChild("Living") and Workspace.Living:FindFirstChild("Deku")
+        
+        if deku then
+            -- Deku sudah terspawn, tunggu sampai mati
+            IsSummoningActionDeku = true
+            Rayfield:Notify({Title = "Deku", Content = "Deku is alive. Waiting...", Duration = 3})
+            
+            -- Tunggu sampai Deku mati
+            repeat
+                task.wait(2)
+                deku = Workspace:FindFirstChild("Living") and Workspace.Living:FindFirstChild("Deku")
+            until not deku or not AutoDeku
+            
+            if not AutoDeku then continue end
+            
+            -- Deku sudah mati, cari OA's Grace
+            IsSummoningActionDeku = true
+            Rayfield:Notify({Title = "Deku", Content = "Deku died. Looking for OA's Grace...", Duration = 3})
+            
+            -- Cari OA's Grace di Workspace.Item2
+            local itemFolder = Workspace:FindFirstChild("Item2")
+            local oaGrace = itemFolder and itemFolder:FindFirstChild("OA's Grace")
+            
+            if oaGrace then
+                -- Teleport ke OA's Grace
+                local prompt = oaGrace:FindFirstChildWhichIsA("ProximityPrompt", true)
+                local targetPart = oaGrace:FindFirstChildWhichIsA("BasePart") or oaGrace
+                
+                if prompt and targetPart then
+                    hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                    hrp.Velocity = Vector3.zero
+                    task.wait(0.5)
+                    
+                    -- Tembak proximity prompt
+                    fireproximityprompt(prompt)
+                    Rayfield:Notify({Title = "Deku", Content = "Using OA's Grace...", Duration = 2})
+                    task.wait(1)
+                    
+                    -- Ganti ke slot dengan value 123
+                    local slot123 = FindSlotWithValue123()
+                    if slot123 then
+                        pcall(function()
+                            game:GetService("ReplicatedStorage"):WaitForChild("StorageRemote"):WaitForChild(slot123):FireServer()
+                        end)
+                        Rayfield:Notify({Title = "Deku", Content = "Switched to slot " .. slot123 .. " for OA's Grace", Duration = 2})
+                        task.wait(1)
+                    end
+                    
+                    -- Gunakan OA's Grace (asumsi dengan menggunakan remote yang sama lagi atau prompt sudah cukup)
+                    -- Jika perlu menggunakan remote khusus, tambahkan di sini
+                    
+                    -- Kembalikan ke stand sebelumnya
+                    if PreviousStandSlot then
+                        pcall(function()
+                            game:GetService("ReplicatedStorage"):WaitForChild("StorageRemote"):WaitForChild(PreviousStandSlot):FireServer()
+                        end)
+                        Rayfield:Notify({Title = "Deku", Content = "Switched back to previous stand (slot " .. PreviousStandSlot .. ")", Duration = 2})
+                    end
+                end
+            else
+                Rayfield:Notify({Title = "Deku", Content = "OA's Grace not found in Item2", Duration = 3})
+            end
+            
+            IsSummoningActionDeku = false
+            task.wait(5) -- Delay sebelum cek lagi
+        else
+            -- Deku belum ada, coba summon
+            IsSummoningActionDeku = true
+            
+            -- Simpan stand sebelumnya
+            PreviousStandSlot = GetCurrentStandSlot()
+            
+            -- Cari slot dengan value 123
+            local slot123 = FindSlotWithValue123()
+            
+            if slot123 then
+                -- Gunakan slot dengan value 123
+                pcall(function()
+                    game:GetService("ReplicatedStorage"):WaitForChild("StorageRemote"):WaitForChild(slot123):FireServer()
+                end)
+                Rayfield:Notify({Title = "Deku", Content = "Using slot " .. slot123 .. " (value 123)", Duration = 2})
+                task.wait(1)
+                
+                -- Cek apakah StandName sudah "One for All [Stage 4]"
+                local standName = LocalPlayer:WaitForChild("Data"):WaitForChild("StandName")
+                
+                if standName.Value == "One for All [Stage 4]" then
+                    -- Teleport ke spawn part dan summon Deku
+                    local map = Workspace:FindFirstChild("Map")
+                    local ruined = map and map:FindFirstChild("RuinedCity")
+                    local spawnPart = ruined and ruined:FindFirstChild("Spawn")
+                    
+                    if spawnPart then
+                        local prompt = spawnPart:FindFirstChild("ProximityPrompt")
+                        hrp.CFrame = spawnPart.CFrame + Vector3.new(0, 3, 0)
+                        hrp.Velocity = Vector3.zero
+                        if prompt then
+                            task.wait(0.5)
+                            fireproximityprompt(prompt)
+                            Rayfield:Notify({Title = "Phase 4", Content = "Summoning deku...", Duration = 1})
+                        end
+                    end
+                    
+                    -- Tunggu sebentar untuk summon
+                    task.wait(3)
+                    
+                    -- Kembalikan ke stand sebelumnya
+                    if PreviousStandSlot then
+                        pcall(function()
+                            game:GetService("ReplicatedStorage"):WaitForChild("StorageRemote"):WaitForChild(PreviousStandSlot):FireServer()
+                        end)
+                        Rayfield:Notify({Title = "Deku", Content = "Switched back to previous stand", Duration = 2})
+                    end
+                else
+                    Rayfield:Notify({Title = "Deku", Content = "StandName is not 'One for All [Stage 4]'", Duration = 3})
+                end
+            else
+                Rayfield:Notify({Title = "Deku", Content = "No slot with value 123 found", Duration = 3})
+            end
+            
+            IsSummoningActionDeku = false
+            task.wait(5) -- Delay sebelum cek lagi
+        end
+    end
+end)
+
 -- ===== AUTO GOJO LOOP (OLD) =====
 task.spawn(function()
     while true do
         task.wait(0.2)
         if IsSummoningAction then continue end 
+        if IsSummoningActionDeku then continue end
 
         if not AutoGojo then
             FollowTarget = false
@@ -1228,6 +1444,7 @@ task.spawn(function()
     while true do
         task.wait(1)
         if IsSummoningAction then continue end 
+        if IsSummoningActionDeku then continue end
 
         if not AutoRed then
             RedFollow = false
@@ -1274,6 +1491,7 @@ task.spawn(function()
     while true do
         task.wait(0.1)
         if IsSummoningAction then continue end 
+        if IsSummoningActionDeku then continue end
 
         if not AutoZMove then
             ZMoveFollow = false
@@ -1324,6 +1542,7 @@ task.spawn(function()
     while true do
         task.wait(0.1)
         if IsSummoningAction then continue end 
+        if IsSummoningActionDeku then continue end
 
         if not AutoHMove then
             HMoveFollow = false
@@ -1374,6 +1593,7 @@ task.spawn(function()
     while true do
         task.wait(0.1)
         if IsSummoningAction then continue end 
+        if IsSummoningActionDeku then continue end
 
         if not AutoGilgamesh then
             GilgameshFollow = false
@@ -1540,6 +1760,7 @@ task.spawn(function()
     while true do
         task.wait(2)
         if IsSummoningAction then continue end
+        if IsSummoningActionDeku then continue end
 
         if not AutoGojoRework then
             CounterFollow = false
@@ -1662,6 +1883,7 @@ task.spawn(function()
     while true do
         task.wait(1)
         if IsSummoningAction then continue end 
+        if IsSummoningActionDeku then continue end
 
         -- Cek Toggle
         if not AutoComboQZG then
